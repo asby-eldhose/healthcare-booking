@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — HealthCare</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #f0f4f8; }
+        .card { border-radius: 12px; }
+        .badge-pending  { background: #fbbf24; color: #000; }
+        .badge-approved { background: #22c55e; color: #fff; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">🏥 HealthCare</a>
+            <div class="ms-auto">
+                <span class="text-white me-3">👤 {{ session['username'] }}</span>
+                <a href="/logout" class="btn btn-outline-light btn-sm">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-5">
+        <h3 class="fw-bold mb-4">My Dashboard</h3>
+
+        <!-- Book Appointment -->
+        <div class="card shadow-sm p-4 mb-5">
+            <h5 class="fw-bold mb-3">📅 Book New Appointment</h5>
+            <form method="POST" action="/book">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Select Doctor</label>
+                        <select name="doctor_id" class="form-select" required>
+                            <option value="">-- Choose Doctor --</option>
+                            {% for doctor in doctors %}
+                            <option value="{{ doctor.id }}">
+                                {{ doctor.name }} — {{ doctor.specialty }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Preferred Date</label>
+                        <input type="date" name="date" class="form-control" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Reason for Visit</label>
+                        <input type="text" name="reason" class="form-control"
+                               placeholder="Brief reason" required>
+                    </div>
+                    <div class="col-md-1 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">Book</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- My Appointments -->
+        <div class="card shadow-sm p-4">
+            <h5 class="fw-bold mb-3">📋 My Appointments</h5>
+            {% if appointments %}
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>#</th>
+                        <th>Doctor</th>
+                        <th>Date</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for appt in appointments %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>Doctor #{{ appt.doctor_id }}</td>
+                        <td>{{ appt.date }}</td>
+                        <td>{{ appt.reason }}</td>
+                        <td>
+                            <span class="badge badge-{{ appt.status }}">
+                                {{ appt.status }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="/cancel/{{ appt.id }}"
+                               class="btn btn-danger btn-sm"
+                               onclick="return confirm('Cancel this appointment?')">
+                                Cancel
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="text-muted">No appointments yet. Book one above!</p>
+            {% endif %}
+        </div>
+    </div>
+
+</body>
+</html>
