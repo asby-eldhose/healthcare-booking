@@ -1,33 +1,38 @@
-name: Deploy Flask App to EC2
-
-on:
-  push:
-    branches:
-      - main
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Deploy Flask App via Bastion
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ubuntu
-          key: ${{ secrets.EC2_SSH_KEY }}
-          port: 22
-          proxy_host: ${{ secrets.BASTION_HOST }}
-          proxy_username: ubuntu
-          proxy_key: ${{ secrets.EC2_SSH_KEY }}
-          proxy_port: 22
           script: |
             cd /home/ubuntu/healthcare-booking
+
+            sudo apt update
+            sudo apt install python3-pip python3-venv -y
+
             git pull origin main
+
+            if [ ! -d "venv" ]; then
+              python3 -m venv venv
+            fi
+
             source venv/bin/activate
             pip install -r requirements.txt
+            pip install gunicorn
+
+            if [ ! -f /etc/systemd/system/healthcare.service ]; then
+              sudo tee /etc/systemd/system/healthcare.service > /dev/null <<EOF
+            [Unit]
+            Description=Healthcare Flask App
+            After=network.target
+
+            [Service]
+            User=ubuntu
+            WorkingDirectory=/home/ubuntu/healthcare-booking
+            Environment="PATH=/home/ubuntu/healthcare-booking/venv/bin"
+            ExecStart=/home/ubuntu/healthcare-booking/venv/bin/gunicorn -w 3 -b 0.0.0.0:5000 app:app
+            Restart=always
+
+            [Install]
+            WantedBy=multi-user.target
+            EOF
+            fi
+
+            sudo systemctl daemon-reload
+            sudo systemctl enable healthcare
             sudo systemctl restart healthcare
             sudo systemctl status healthcare --no-pager
