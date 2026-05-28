@@ -20,12 +20,10 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
-
           proxy_host: ${{ secrets.BASTION_HOST }}
           proxy_username: ubuntu
           proxy_key: ${{ secrets.EC2_SSH_KEY }}
           proxy_port: 22
-
           script: |
             cd /home/ubuntu/healthcare-booking
             git pull origin main
