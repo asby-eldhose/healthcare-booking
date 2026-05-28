@@ -10,14 +10,17 @@ jobs:
     steps:
 
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: SSH into EC2 and deploy Flask app
-        uses: appleboy/ssh-action@master
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          request_pty: true
+          script_stop: false
           script: |
             cd /home/ubuntu/healthcare-booking
             git pull origin main
