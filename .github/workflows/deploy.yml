@@ -12,19 +12,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: SSH into EC2 and deploy Flask app
+      - name: Deploy via Bastion Host
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.EC2_HOST }}
+          host: ${{ secrets.BASTION_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
-          request_pty: true
-          script_stop: false
+          proxy_host: ${{ secrets.BASTION_HOST }}
+          proxy_username: ubuntu
+          proxy_key: ${{ secrets.EC2_SSH_KEY }}
+          proxy_port: 22
           script: |
-            cd /home/ubuntu/healthcare-booking
-            git pull origin main
-            source venv/bin/activate
-            pip install -r requirements.txt
-            sudo systemctl restart healthcare
+            ssh -o StrictHostKeyChecking=no -i ~/healthcare-key.pem ubuntu@${{ secrets.EC2_HOST }} '
+            cd /home/ubuntu/healthcare-booking &&
+            git pull origin main &&
+            source venv/bin/activate &&
+            pip install -r requirements.txt &&
+            sudo systemctl restart healthcare &&
             sudo systemctl is-active healthcare
+            '
